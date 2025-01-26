@@ -113,3 +113,26 @@ List of Flights for Changi Airport Terminal 5
         Console.WriteLine("{0,-16}{1,-23}{2,-23}{3,-23}{4}", flight.FlightNumber, airlineName, flight.Origin, flight.Destination, flight.ExpectedTime);
     }
 }
+
+// Q4 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void ListBoardingGates()
+{
+    Console.WriteLine(@"=============================================
+List of Boarding Gates for Changi Airport Terminal 5
+=============================================");
+    Console.WriteLine("{0,-20}{1,-20}{2,-20}{3,-20}{4}", "Gate Name", "DDJB", "CFFT", "LWTT", "Flight Number");
+    foreach (BoardingGate gate in terminal.BoardingGates.Values)
+    {
+        string flightNo;
+        if (gate.Flight == null)
+        {
+            flightNo = "Unassigned";
+        }
+        else
+        {
+            flightNo = gate.Flight.FlightNumber;
+        }
+        Console.WriteLine("{0,-20}{1,-20}{2,-20}{3,-20}{4}", gate.GateName, gate.SupportsDDJB, gate.SupportsCFFT, gate.SupportsLWTT, flightNo);
+    }
+}
