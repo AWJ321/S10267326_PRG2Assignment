@@ -852,3 +852,172 @@ Welcome to Changi Airport Terminal 5
         Console.WriteLine("Invalid input, returning to menu.");
     }
 }
+
+// Advanced Q1: Automatically assign unassigned flights to unassigned boarding gates
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void AutoProcessFlightsToGates()
+{
+    Queue<Flight> unassignedFlights = new Queue<Flight>();
+
+    // Counter for flights already assigned to gates
+    int flightsAlreadyAssigned = 0;
+
+    // Counter for gates already assigned to flights
+    int gatesAlreadyAssigned = 0;
+
+    //Identify unassigned flights and count already assigned flights
+    foreach (Flight flight in terminal.Flights.Values)
+    {
+        bool isAssigned = false;
+
+        // Check if the flight is already assigned to a gate
+        foreach (BoardingGate gate in terminal.BoardingGates.Values)
+        {
+            if (gate.Flight == flight)
+            {
+                isAssigned = true;
+                flightsAlreadyAssigned++;
+                break;
+            }
+        }
+
+        // If unassigned, add to the queue
+        if (!isAssigned)
+        {
+            unassignedFlights.Enqueue(flight);
+        }
+    }
+
+    // Count unassigned flights
+    int totalUnassignedFlights = unassignedFlights.Count;
+    Console.WriteLine($"Total number of flights without a boarding gate assigned: {totalUnassignedFlights}");
+
+    // Identify unassigned gates and count already assigned gates
+    List<BoardingGate> unassignedGates = new List<BoardingGate>();
+    foreach (BoardingGate gate in terminal.BoardingGates.Values)
+    {
+        // Gate has no flight assigned  
+        if (gate.Flight == null)
+        {
+            unassignedGates.Add(gate);
+        }
+        else
+        {
+            gatesAlreadyAssigned++;
+        }
+    }
+
+    // Count unassigned gates
+    int totalUnassignedGates = unassignedGates.Count;
+    Console.WriteLine($"Total number of unassigned boarding gates: {totalUnassignedGates}");
+
+    // Count of flights processed
+    int totalFlightsProcessed = 0;
+
+    // Count of gates processed
+    int totalGatesProcessed = 0;
+
+    //Display heading
+    Console.WriteLine("{0,-16}{1,-23}{2,-23}{3,-23}{4,-35}{5,-23}{6}", "Flight Number", "Airline Name", "Origin", "Destination", "Expected Departure/Arrival Time", "Special Request Code", "Boarding Gate");
+    while (true)
+    {
+        Flight flight1;
+        try
+        {
+            flight1 = unassignedFlights.Dequeue();
+        }
+        // Check if queue has any items 
+
+        catch (InvalidOperationException)
+        {
+            break;
+        }
+
+        string specialRqCode = "None";
+        if (flight1 is DDJBFlight)
+            specialRqCode = "DDJB";
+        else if (flight1 is CFFTFlight)
+            specialRqCode = "CFFT";
+        else if (flight1 is LWTTFlight)
+            specialRqCode = "LWTT";
+        else
+            specialRqCode = "None";
+
+        BoardingGate gateSearch = null;
+
+        // Find a suitable gate for the flight
+        if (specialRqCode != "None") // If the flight has a special request
+        {
+            foreach (BoardingGate gate in unassignedGates)
+            {
+                if ((specialRqCode == "DDJB" && gate.SupportsDDJB) || (specialRqCode == "CFFT" && gate.SupportsCFFT) || (specialRqCode == "LWTT" && gate.SupportsLWTT))
+                {
+                    gateSearch = gate;
+                    break;
+                }
+            }
+        }
+        else // If the flight has no special request
+        {
+            foreach (BoardingGate gate in unassignedGates)
+            {
+                if (!gate.SupportsDDJB && !gate.SupportsCFFT && !gate.SupportsLWTT)
+                {
+                    gateSearch = gate;
+                    break;
+                }
+            }
+        }
+
+        // Assign the gate to the flight and remove the gate from unassigned list
+        gateSearch.Flight = flight1;
+        unassignedGates.Remove(gateSearch);
+        totalFlightsProcessed++;
+        totalGatesProcessed++;
+    }
+
+    // Print the details of the assigned flight
+    foreach (Flight flight in terminal.Flights.Values)
+    {
+        string airlineCode = flight.FlightNumber.Substring(0, 2);
+        string airlineName = terminal.Airlines[airlineCode].Name;
+
+        string specialRqCode = "None";
+        if (flight is DDJBFlight)
+            specialRqCode = "DDJB";
+        else if (flight is CFFTFlight)
+            specialRqCode = "CFFT";
+        else if (flight is LWTTFlight)
+            specialRqCode = "LWTT";
+        else
+            specialRqCode = "None";
+
+        foreach (BoardingGate gate in terminal.BoardingGates.Values)
+        {
+            if (gate.Flight == flight)
+            {
+                Console.WriteLine("{0,-16}{1,-23}{2,-23}{3,-23}{4,-35}{5,-23}{6}", flight.FlightNumber, airlineName, flight.Origin, flight.Destination, flight.ExpectedTime, specialRqCode, gate.GateName);
+            }
+        }
+    }
+
+    // Summary of processing
+
+    Console.WriteLine($"Total Flights Processed and Assigned: {totalFlightsProcessed}");
+    Console.WriteLine($"Total Boarding Gates Processed and Assigned: {totalGatesProcessed}");
+
+    if (flightsAlreadyAssigned == 0)
+        Console.WriteLine("No flights assigned originally.");
+    else
+    {
+        double percentageFlights = Math.Round((Convert.ToDouble(totalFlightsProcessed) / flightsAlreadyAssigned) * 100, 2);
+        Console.WriteLine($"Percentage of Flights Processed Automatically Over Those Already Assigned: {percentageFlights}%");
+    }
+    if (gatesAlreadyAssigned == 0)
+        Console.WriteLine("No gates assigned originally.");
+    else
+    {
+        double percentageGates = Math.Round((Convert.ToDouble(totalGatesProcessed) / gatesAlreadyAssigned) * 100, 2);
+        Console.WriteLine($"Percentage of Gates Processed Automatically Over Those Already Assigned: {percentageGates}%");
+    }
+}
