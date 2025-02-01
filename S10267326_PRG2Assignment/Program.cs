@@ -729,3 +729,126 @@ void DeleteSelectedFlight(Airline airline, string flightNumber)
         Console.WriteLine("Deletion canceled.");
     }
 }
+
+
+// Q9: Display scheduled flights in chronological order
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void DisplayDayChrono()
+{
+    // Get today's date (no time component)
+    DateTime today = DateTime.Now.Date;
+
+    // List to store flights scheduled for today
+    List<Flight> flightList = new List<Flight>();
+
+    // Filter flights for today's date
+    foreach (Flight flight in terminal.Flights.Values)
+    {
+        if (flight.ExpectedTime.Date == today)
+        {
+            flightList.Add(flight);
+        }
+    }
+    // Sort flights chronologically by ExpectedTime (default sorting for DateTime)
+    flightList.Sort();
+
+    // Display table header
+    Console.WriteLine("{0,-16}{1,-23}{2,-23}{3,-23}{4,-40}{5,-14}{6,-23}{7}", "Flight Number", "Airline Name", "Origin", "Destination", "Expected Departure/Arrival Time", "Status", "Special Request Code", "Boarding Gate");
+
+    // Iterate through the sorted flight list and display each flight's details
+    foreach (Flight flight in flightList)
+    {
+        string airlineCode = flight.FlightNumber.Substring(0, 2);
+        string airlineName = terminal.Airlines[airlineCode].Name;
+
+        string specialRqcode = "None";
+        if (flight is DDJBFlight)
+            specialRqcode = "DDJB";
+        else if (flight is CFFTFlight)
+            specialRqcode = "CFFT";
+        else if (flight is LWTTFlight)
+            specialRqcode = "LWTT";
+        else
+            specialRqcode = "None";
+
+        // Check if the flight has a boarding gate assigned
+        string boardingGateName = "Unassigned";
+        foreach (BoardingGate gate in terminal.BoardingGates.Values)
+        {
+            if (gate.Flight == flight)
+            {
+                boardingGateName = gate.GateName;
+                break;
+            }
+        }
+
+        // Display flight details
+        Console.WriteLine("{0,-16}{1,-23}{2,-23}{3,-23}{4,-40}{5,-14}{6,-23}{7}", flight.FlightNumber, airlineName, flight.Origin, flight.Destination, flight.ExpectedTime, flight.Status, specialRqcode, boardingGateName);
+    }
+}
+
+
+// MENU
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Console.WriteLine("\n\n\n");
+while (true)
+{
+    Console.WriteLine();
+    Console.Write(@"=============================================
+Welcome to Changi Airport Terminal 5
+=============================================
+1. List All Flights
+2. List Boarding Gates
+3. Assign a Boarding Gate to a Flight
+4. Create Flight
+5. Display Airline Flights
+6. Modify Flight Details
+7. Display Flight Schedule
+0. Exit");
+    Console.WriteLine("\n\nPlease select your option: ");
+    string option = Console.ReadLine();
+    if (option == "0")
+    {
+        Console.WriteLine("Goodbye!");
+        break;
+    }
+    else if (option == "1")
+    {
+        ListFlights();
+        continue;
+    }
+    else if (option == "2")
+    {
+        ListBoardingGates();
+        continue;
+    }
+    else if (option == "3")
+    {
+        AssignGateToFlight();
+        continue;
+    }
+    else if (option == "4")
+    {
+        CreateFlight();
+        continue;
+    }
+    else if (option == "5")
+    {
+        AirlineDetails();
+        continue;
+    }
+    else if (option == "6")
+    {
+        ModifyFlight();
+        continue;
+    }
+    else if (option == "7")
+    {
+        DisplayDayChrono();
+        continue;
+    }
+    else
+    {
+        Console.WriteLine("Invalid input, returning to menu.");
+    }
+}
