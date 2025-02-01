@@ -804,6 +804,8 @@ Welcome to Changi Airport Terminal 5
 5. Display Airline Flights
 6. Modify Flight Details
 7. Display Flight Schedule
+8. Process Unassigned Flights to Boarding Gates
+9. Display Total Fee per Airline
 0. Exit");
     Console.WriteLine("\n\nPlease select your option: ");
     string option = Console.ReadLine();
@@ -845,6 +847,16 @@ Welcome to Changi Airport Terminal 5
     else if (option == "7")
     {
         DisplayDayChrono();
+        continue;
+    }
+    else if (option == "8")
+    {
+        AutoProcessFlightsToGates();
+        continue;
+    }
+    else if (option == "9")
+    {
+        DisplayFee();
         continue;
     }
     else
@@ -1019,5 +1031,120 @@ void AutoProcessFlightsToGates()
     {
         double percentageGates = Math.Round((Convert.ToDouble(totalGatesProcessed) / gatesAlreadyAssigned) * 100, 2);
         Console.WriteLine($"Percentage of Gates Processed Automatically Over Those Already Assigned: {percentageGates}%");
+    }
+}
+
+
+// Advanced Q2: Automatically assign unassigned flights to unassigned boarding gates
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void DisplayFee()
+{
+    while (true)
+    {
+        // Check if all flights are assigned
+        int countAssigned = 0;
+        foreach (Flight flight in terminal.Flights.Values)
+        {
+            foreach (BoardingGate gate in terminal.BoardingGates.Values)
+            {
+                if (gate.Flight == flight)
+                {
+                    countAssigned++;
+                }
+            }
+        }
+        if (countAssigned != terminal.Flights.Count)
+        {
+            Console.WriteLine("Ensure all flights have been assigned before running this feature again.");
+            break;
+        }
+
+        double termiSubtotal = 0;
+        double termiDiscount = 0;
+        double termiFinal = 0;
+
+        Console.WriteLine("{0,-20}{1,-20}{2,-20}{3}", "Airline Name", "Original Subtotal", "Discount Total", "Final Subtotal");
+        foreach (Airline airline in terminal.Airlines.Values)
+        {
+            Airline selectedAirline = terminal.Airlines[airline.Code];
+
+            // Calculate airline fee (no discount)
+            double airlineFee = 0;
+            foreach (Flight flight in selectedAirline.Flights.Values)
+            {
+                double flightFee = 0;
+                if (flight.Origin == "Singapore (SIN)")
+                {
+                    flightFee += 800;
+                }
+                if (flight.Destination == "Singapore (SIN)")
+                {
+                    flightFee += 500;
+                }
+                double srcFee = flight.CalculateFees();
+                flightFee += srcFee;
+
+                airlineFee += flightFee + 300;
+            }
+
+            // Calculate airline discount 
+            double discountOff = 0;
+            int flightCount = airline.Flights.Count();
+            int promoCondition1 = (flightCount / 3);
+
+            int promoCondition2 = 0;
+            int promoCondition3 = 0;
+            int promoCondition4 = 0;
+            TimeSpan start = new TimeSpan(21, 0, 0);
+            TimeSpan end = new TimeSpan(11, 0, 0);
+            foreach (Flight flight in selectedAirline.Flights.Values)
+            {
+                TimeSpan timeOfFlight = flight.ExpectedTime.TimeOfDay;
+                if ((timeOfFlight < start) && (timeOfFlight > end))
+                {
+                    promoCondition2 += 1;
+                }
+                if (flight.Origin == "Dubai (DXB)" || flight.Origin == "Bangkok (BKK)" || flight.Origin == "Tokyo (NRT)")
+                {
+                    promoCondition3 += 1;
+                }
+                if (flight is NORMFlight)
+                {
+                    promoCondition4 += 1;
+                }
+            }
+
+            bool promoCondition5 = false;
+            if (flightCount > 5)
+            {
+                promoCondition5 = true;
+            }
+
+            discountOff = (promoCondition1 * 350) + (promoCondition2 * 110) + (promoCondition3 * 25) + (promoCondition4 * 50);
+
+            double originalSubtotal = airlineFee;
+
+            if (promoCondition5 == true)
+            {
+                airlineFee = airlineFee * 0.97;
+            }
+            airlineFee = airlineFee - Convert.ToDouble(discountOff);
+
+            // Display values of each airline
+            Console.WriteLine("{0,-20}{1,-20:F2}{2,-20:F2}{3:F2}", airline.Name, originalSubtotal, discountOff, airlineFee);
+
+            termiSubtotal += originalSubtotal;
+            termiDiscount += discountOff;
+            termiFinal += airlineFee;
+        }
+
+        // Display Terminal 5 values
+        Console.WriteLine($"Subtotal of all airline fees: ${termiSubtotal:F2}");
+        Console.WriteLine($"Subtotal of all airline discounts: ${termiDiscount:F2}");
+        Console.WriteLine($"Final fee Terminal 5 collects: ${termiFinal:F2}");
+        double discOverFinal = Math.Round((termiDiscount / termiFinal) * 100, 2);
+        Console.WriteLine($"Percentage of the subtotal discounts over the final total of fees: {discOverFinal:F2}%");
+
+        break;
     }
 }
