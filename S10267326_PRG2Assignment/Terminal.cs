@@ -99,7 +99,7 @@ namespace S10267326_PRG2Assignment
             return "Airline: " + Name + "\tCode: " + Code;
         }
     }
-    abstract class Flight
+    abstract class Flight : IComparable<Flight>
     {
         public string FlightNumber { get; set; }
         public string Origin { get; set; }
@@ -127,6 +127,11 @@ namespace S10267326_PRG2Assignment
             }
             return 0;
         }
+        public int CompareTo(Flight flight)
+        {
+            return ExpectedTime.CompareTo(flight.ExpectedTime);
+        }
+
         public override string ToString()
         {
             return "Flight Number: " + FlightNumber + "\tOrigin: " + Origin + "\tDestination: " + Destination + "\tExpected Time: " + ExpectedTime + "\tStatus: " + Status;
